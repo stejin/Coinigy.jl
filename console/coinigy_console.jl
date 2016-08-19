@@ -81,7 +81,7 @@ function connect(args)
 
   println(handler.api)
 
-  coinigy_connect(handler)
+  Coinigy.connect(handler)
   return handler
 end
 

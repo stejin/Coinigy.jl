@@ -8,7 +8,7 @@ Create an instance of `CoinigyHandler` and use it to call REST or WebSocket meth
 using Coinigy
 
 handler = CoinigyHandler(public_key = "public key", private_key = "private key", force_authentication = true))
-coinigy_connect(handler)
+Coinigy.connect(handler)
 
 # Wait for connection to complete
 

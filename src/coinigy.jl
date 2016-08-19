@@ -1,7 +1,7 @@
 module Coinigy
 
   export  CoinigyHandler,
-          coinigy_connect,
+          connect,
           subscribe,
           unsubscribe,
           getUserInfo,

@@ -234,7 +234,7 @@ function coinigy(handler)
   end
 end
 
-function coinigy_connect(handler::CoinigyHandler)
+function connect(handler::CoinigyHandler)
   uri = URI("wss://sc-01.coinigy.com:443")
   println("Connecting to $uri")
   wsconnect(handler.client, uri, handler)
