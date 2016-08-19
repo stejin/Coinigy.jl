@@ -25,8 +25,6 @@ type CoinigyHandler <: WebSocketHandler
       api = Dict("apiKey" => public_key, "apiSecret" => private_key)
       new(WSClient(), api, force_authentication, Channel{Any}(3), false, 0, Dict())
   end
-
-  #CoinigyHandler(api::Dict, forceAuthentication::Bool = false) =
 end
 
 function load_token()
