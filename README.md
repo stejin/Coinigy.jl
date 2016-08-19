@@ -1,0 +1,1 @@
+# Coinigy.jl
