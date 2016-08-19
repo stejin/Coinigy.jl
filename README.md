@@ -19,3 +19,8 @@ Exchanges
 Channels
 
 markets = getMarkets(handler)["data"]
+
+
+```
+
+For more usage examples see console/coinigy_console.jl

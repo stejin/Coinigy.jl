@@ -2,6 +2,8 @@ module Coinigy
 
   export  CoinigyHandler,
           coinigy_connect,
+          subscribe,
+          unsubscribe,
           getUserInfo,
           getActivityLog,
           getNotifications,
