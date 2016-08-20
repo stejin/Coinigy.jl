@@ -20,6 +20,7 @@ Channels
 
 markets = getMarkets(handler)["data"]
 
+subscribe(handler, "TICKER")
 
 ```
 
