@@ -12,14 +12,16 @@ Coinigy.connect(handler)
 
 # Wait for connection to complete
 
-# Exchanges
+# Exchanges - retrieved via WebSockets API on connect
 Exchanges
 
-# channels
+# Channels - retrieved via WebSockets API on connect
 Channels
 
+# Get list of markets via REST call
 markets = getMarkets(handler)["data"]
 
+# Subscribe to 'TICKER' channel via WebSockets API
 subscribe(handler, "TICKER")
 
 ```
