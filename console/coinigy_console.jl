@@ -7,7 +7,7 @@ using Coinigy
 # Channels
 
 # Channel managements
-subscribe(channel) = Coinigy.subscribe(handler, channel)
+subscribe(channel, publish_callback) = Coinigy.subscribe(handler, channel, publish_callback)
 unsubscribe(channel) = Coinigy.unsubscribe(handler, channel)
 
 # REST calls
@@ -87,4 +87,5 @@ end
 
 ARGS = ["--config", "config.json", "--forceauth"]
 handler = connect(ARGS)
+# handler.debug = true
 println("Connected")

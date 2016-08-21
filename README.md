@@ -22,7 +22,10 @@ Channels
 markets = getMarkets(handler)["data"]
 
 # Subscribe to 'TICKER' channel via WebSockets API
-subscribe(handler, "TICKER")
+
+print_ticker(data) = println(data)
+
+subscribe(handler, "TICKER", print_ticker)
 
 ```
 

@@ -12,18 +12,19 @@ import DandelionWebSockets: on_text, on_binary,
 type CoinigyHandler <: WebSocketHandler
   client::WSClient
   api::Dict
-  forceAuthentication::Bool
+  force_authentication::Bool
   stop_channel::Channel{Any}
   debug::Bool
   cid::Int
   requests::Dict
+  channel_callbacks::Dict
 
   function CoinigyHandler(;
                     public_key = "",
                     private_key = "",
                     force_authentication = false)
       api = Dict("apiKey" => public_key, "apiSecret" => private_key)
-      new(WSClient(), api, force_authentication, Channel{Any}(3), false, 0, Dict())
+      new(WSClient(), api, force_authentication, Channel{Any}(3), false, 0, Dict(), Dict())
   end
 end
 
@@ -107,7 +108,7 @@ function generateCallId(handler::CoinigyHandler)
   return handler.cid
 end
 
-function emitRaw(handler::CoinigyHandler, event, data, callback)
+function emitRaw(handler::CoinigyHandler, event, data, callback, extra_infos = nothing)
   # Make an event object and send it out
   cid = generateCallId(handler)
   eventInfo = Dict("event" => event, "data" => data, "cid" => cid)
@@ -118,7 +119,7 @@ function emitRaw(handler::CoinigyHandler, event, data, callback)
   handler.debug && println("Sent: $payload")
 
   # Keep reference of the request
-  request = Dict("callback" => callback, "eventInfo" => eventInfo)
+  request = Dict("callback" => callback, "eventInfo" => eventInfo, "extra_infos" => extra_infos)
   handler.requests[cid] = request
   return cid
 end
@@ -145,7 +146,7 @@ state_closed(handler::CoinigyHandler) = println("State: CLOSED")
 
 function handle_handshake(handler::CoinigyHandler, eventInfo)
   handler.debug && println("HANDSHAKE CALLBACK")
-  if handler.forceAuthentication || !eventInfo["data"]["isAuthenticated"]
+  if handler.force_authentication || !eventInfo["data"]["isAuthenticated"]
     emitRaw(handler, "auth", handler.api, handle_auth)
   else
     handle_auth(handler, eventInfo)
@@ -168,7 +169,10 @@ function handle_command(handler::CoinigyHandler, eventInfo)
     token = eventInfo["data"]["token"]
     save_token(token)
   elseif event == "#publish"
-    publish(handler, eventInfo["data"])
+    channel = eventInfo["data"]["channel"]
+    cb = handler.channel_callbacks[channel]
+    cb(eventInfo["data"])
+    #publish(handler, eventInfo["data"])
   else
     println("Unhandled server event: $eventInfo")
   end
@@ -194,7 +198,10 @@ end
 function handle_subscribe(handler, eventInfo)
   handler.debug && println("SUBSCRIPTION CALLBACK")
   if "rid" in keys(eventInfo)
-    println("acked subscription to channel $(handler.requests[eventInfo["rid"]]["eventInfo"]["data"])")
+    channel = handler.requests[eventInfo["rid"]]["eventInfo"]["data"]
+    callback = handler.requests[eventInfo["rid"]]["extra_infos"]
+    handler.channel_callbacks[channel] = callback
+    println("acked subscription to channel $channel")
   end
 end
 
@@ -205,17 +212,16 @@ function handle_unsubscribe(handler, eventInfo)
   end
 end
 
-function publish(handler, eventInfo)
-  pdata = eventInfo["data"]
-  println("Publish: $(JSON.json(pdata))")
+function publish(data)
+  println("Publish: $(JSON.json(data))")
 end
 
 exchanges(handler) = emitRaw(handler, "exchanges", nothing, handle_exchanges)
 
 channels(handler) = emitRaw(handler, "channels", nothing, handle_channels)
 
-function subscribe(handler, channel)
-  cid = emitRaw(handler, "#subscribe", channel, handle_subscribe)
+function subscribe(handler, channel, publish_callback = publish)
+  cid = emitRaw(handler, "#subscribe", channel, handle_subscribe, publish_callback)
   handler.debug && println("Subscribe cid=$cid channel=$channel")
 end
 
