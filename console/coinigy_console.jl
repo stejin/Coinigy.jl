@@ -27,7 +27,7 @@ getMarkets() = Coinigy.getMarkets(handler)["data"]
 getTradeHistory(exchange, market) = Coinigy.getTradeHistory(handler, exchange, market)["data"]["history"]
 getAsks(exchange, market) = Coinigy.getAsks(handler, exchange, market)["data"]["asks"]
 getBids(exchange, market) = Coinigy.getBids(handler, exchange, market)["data"]["bids"]
-getOrders(exchange, market) = Coinigy.getOrders(handler, exchange, market)["data"]["orders"]
+getOrders(exchange, market) = Coinigy.getOrders(handler, exchange, market)["data"]
 getMarketData(exchange, market) = Coinigy.getMarketData(handler, exchange, market)["data"]
 getTicker(exchange, market) = Coinigy.getTicker(handler, exchange, market)["data"]
 
