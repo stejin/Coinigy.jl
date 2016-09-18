@@ -1,5 +1,4 @@
 using ArgParse
-using DataFrames
 using Coinigy
 
 # Objectes populated by WebApi calls
