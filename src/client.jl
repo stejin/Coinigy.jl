@@ -1,5 +1,3 @@
-using DataFrames
-using DataFramesIO
 using JSON
 using Requests
 import Requests: URI, post
@@ -181,18 +179,15 @@ end
 function handle_exchanges(handler, eventInfo)
   handler.debug && println("EXCHANGES CALLBACK")
   edata = eventInfo["data"][1]
-  global Exchanges = json2df(JSON.json(edata))
+  global Exchanges = edata
   println("Exchanges updated")
-  #println("Exchanges: $(json2df(JSON.json(edata)))")
 end
 
 function handle_channels(handler, eventInfo)
   handler.debug && println("CHANNEL CALLBACK")
   cdata = eventInfo["data"][1]
-  global Channels = json2df(JSON.json(cdata))
+  global Channels = cdata
   println("Channels updated")
-  #println("Got $(length(cdata)) channels.")
-  #println("Channels: $(json2df(JSON.json(cdata)))")
 end
 
 function handle_subscribe(handler, eventInfo)
