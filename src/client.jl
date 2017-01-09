@@ -30,7 +30,7 @@ function load_token()
   token = nothing
   if isfile("coinigy.token")
     open("coinigy.token") do f
-      token = readall(f)
+      token = readstring(f)
     end
   end
   return token
@@ -55,7 +55,7 @@ function getResult(handler, url, data = Dict())
 end
 
 # These are called when you get text/binary frames, respectively.
-on_text(handler::CoinigyHandler, s::UTF8String)         = onMessage(handler, s, false)
+on_text(handler::CoinigyHandler, s::String)         = onMessage(handler, s, false)
 on_binary(handler::CoinigyHandler, data::Vector{UInt8}) = onMessage(handler, data, true)
 
 function onMessage(handler::CoinigyHandler, payload, isBinary)
@@ -77,8 +77,8 @@ function onMessage(handler::CoinigyHandler, payload, isBinary)
     end
 
     if handler.debug
-      if length(utf8(payload)) > 2048
-        println("Ignoring payload of $(length(utf8(payload))) bytes.")
+      if length(String(payload)) > 2048
+        println("Ignoring payload of $(length(String(payload))) bytes.")
       else
         println("Data: $responseEventInfo")
       end
@@ -98,7 +98,7 @@ end
 function sendMessage(handler::CoinigyHandler, payload, isBinary)
   handler.debug && println("Sending: $payload")
   isBinary && send_binary(handler.client, payload)
-  !isBinary && send_text(handler.client, utf8(payload))
+  !isBinary && send_text(handler.client, String(payload))
 end
 
 function generateCallId(handler::CoinigyHandler)
