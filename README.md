@@ -25,7 +25,7 @@ markets = getMarkets(handler)["data"]
 
 print_ticker(data) = println(data)
 
-subscribe(handler, "TICKER", print_ticker)
+Coinigy.subscribe(handler, "TICKER", print_ticker)
 
 ```
 

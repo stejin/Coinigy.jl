@@ -65,8 +65,8 @@ function onMessage(handler::CoinigyHandler, payload, isBinary)
   end
 
   # ping
-  if payload == "1"
-    return sendMessage(handler, b"2", true)
+  if payload == "#1"
+    return sendMessage(handler, b"#2", true)
   end
 
   try
@@ -234,7 +234,7 @@ function coinigy(handler)
 end
 
 function connect(handler::CoinigyHandler)
-  uri = URI("wss://sc-01.coinigy.com:443")
+  uri = URI("wss://sc-02.coinigy.com:443/socketcluster/")
   println("Connecting to $uri")
   wsconnect(handler.client, uri, handler)
 end
