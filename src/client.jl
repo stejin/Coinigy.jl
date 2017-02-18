@@ -11,6 +11,7 @@ type CoinigyHandler <: WebSocketHandler
   client::WSClient
   api::Dict
   force_authentication::Bool
+  token::String
   stop_channel::Channel{Any}
   debug::Bool
   cid::Int
@@ -20,14 +21,15 @@ type CoinigyHandler <: WebSocketHandler
   function CoinigyHandler(;
                     public_key = "",
                     private_key = "",
+                    token = load_token(),
                     force_authentication = false)
       api = Dict("apiKey" => public_key, "apiSecret" => private_key)
-      new(WSClient(), api, force_authentication, Channel{Any}(3), false, 0, Dict(), Dict())
+      new(WSClient(), api, force_authentication, token, Channel{Any}(3), false, 0, Dict(), Dict())
   end
 end
 
 function load_token()
-  token = nothing
+  token = ""
   if isfile("coinigy.token")
     open("coinigy.token") do f
       token = readstring(f)
@@ -36,7 +38,8 @@ function load_token()
   return token
 end
 
-function save_token(token)
+function save_token(handler, token)
+  handler.token = token
   open("coinigy.token", "w") do f
     write(f, token)
   end
@@ -47,11 +50,15 @@ function getResult(handler, url, data = Dict())
                   "X-API-KEY" => handler.api["apiKey"],
                   "X-API-SECRET" => handler.api["apiSecret"])
   resp = post(url; headers = headers, data = JSON.json(data))
-  parsedresp = Requests.json(resp)
-  if resp.status != 200 || "error" in keys(parsedresp)
-    error("$(resp.status): Error executing the request: $(parsedresp["error"])")
+  try
+    parsedresp = Requests.json(resp)
+    if resp.status != 200 || "error" in keys(parsedresp)
+      error("$(resp.status): Error executing the request: $(parsedresp["error"])")
+    end
+    parsedresp
+  catch e
+    error("Error parsing response: $resp, url: $url, data: $data")
   end
-  parsedresp
 end
 
 # These are called when you get text/binary frames, respectively.
@@ -72,26 +79,17 @@ function onMessage(handler::CoinigyHandler, payload, isBinary)
   try
     responseEventInfo = JSON.parse(payload)
 
-    if "cid" in keys(responseEventInfo)
-      handle_command(handler, responseEventInfo)
-    end
-
-    if handler.debug
-      if length(String(payload)) > 2048
-        println("Ignoring payload of $(length(String(payload))) bytes.")
-      else
-        println("Data: $responseEventInfo")
-      end
-    end
-
     if ("rid" in keys(responseEventInfo)) && (responseEventInfo["rid"] in keys(handler.requests))
       request = handler.requests[responseEventInfo["rid"]]
       handler.debug && println("In response to $(request["eventInfo"])")
       cb = request["callback"]
       cb(handler, responseEventInfo)
+    else
+      handle_command(handler, responseEventInfo)
     end
+
   catch e
-    println("Error processing payload: $payload: $e")
+    error("Error processing payload: $payload: $e")
   end
 end
 
@@ -130,13 +128,11 @@ state_connecting(::CoinigyHandler) = println("State: CONNECTING")
 function state_open(handler::CoinigyHandler)
   println("State: OPEN")
 
-  token = load_token()
-  # Try and get a saved token.
-  if token == nothing
-    token = "ux87psl$(abs(rand(Int)))z8l"
+  if isempty(handler.token)
+    handler.token = "ux87psl$(abs(rand(Int)))z8l"
   end
 
-  emitRaw(handler, "#handshake", Dict("authToken" => token), handle_handshake)
+  emitRaw(handler, "#handshake", Dict("authToken" => handler.token), handle_handshake)
 end
 
 state_closing(handler::CoinigyHandler) = println("State: CLOSING")
@@ -160,12 +156,15 @@ function handle_command(handler::CoinigyHandler, eventInfo)
   handler.debug && println("HANDLE COMMAND")
   # Server told us to do something.
   event = eventInfo["event"]
-  cid = eventInfo["cid"]
 
   if event == "#setAuthToken"
     # Set/save auth token.
     token = eventInfo["data"]["token"]
-    save_token(token)
+    save_token(handler, token)
+  elseif event == "#removeAuthToken"
+      # Set/save auth token.
+      token = ""
+      save_token(handler, token)
   elseif event == "#publish"
     channel = eventInfo["data"]["channel"]
     cb = handler.channel_callbacks[channel]
