@@ -17,6 +17,7 @@ type CoinigyHandler <: WebSocketHandler
   cid::Int
   requests::Dict
   channel_callbacks::Dict
+  max_attempts::Int
 
   function CoinigyHandler(;
                     public_key = "",
@@ -24,7 +25,7 @@ type CoinigyHandler <: WebSocketHandler
                     token = load_token(),
                     force_authentication = false)
       api = Dict("apiKey" => public_key, "apiSecret" => private_key)
-      new(WSClient(), api, force_authentication, token, Channel{Any}(3), false, 0, Dict(), Dict())
+      new(WSClient(), api, force_authentication, token, Channel{Any}(3), false, 0, Dict(), Dict(), 6)
   end
 end
 
@@ -47,17 +48,30 @@ end
 
 function getResult(handler, url, data = Dict())
   headers = Dict("Content-Type" => "application/json",
-                  "X-API-KEY" => handler.api["apiKey"],
-                  "X-API-SECRET" => handler.api["apiSecret"])
+  "X-API-KEY" => handler.api["apiKey"],
+  "X-API-SECRET" => handler.api["apiSecret"])
+  attempt = 1
   resp = post(url; headers = headers, data = JSON.json(data))
-  try
-    parsedresp = Requests.json(resp)
-    if resp.status != 200 || "error" in keys(parsedresp)
-      error("$(resp.status): Error executing the request: $(parsedresp["error"])")
+  # Retry if service temporarily not available
+  while resp.status == 503 && attempt < handler.max_attempts
+    sleep(attempt) #increase wait time by one second for each failed attempt
+    attempt += 1
+    resp = post(url; headers = headers, data = JSON.json(data))
+  end
+  if resp.status == 503
+    error("Aborting request with url: $url, data: $data after $(handler.max_attempts) attempts")
+  elseif resp.status != 200
+    error("$(resp.status): Error executing the request with url: $url, data: $data - $resp")
+  else
+    try
+      parsedresp = Requests.json(resp)
+      if "error" in keys(parsedresp)
+        error("Error parsing response to request with url: $url, data: $dat - $(parsedresp["error"])")
+      end
+      parsedresp
+    catch e
+      error("Error parsing response to request with url: $url, data: $data - $resp")
     end
-    parsedresp
-  catch e
-    error("Error parsing response: $resp, url: $url, data: $data")
   end
 end
 
