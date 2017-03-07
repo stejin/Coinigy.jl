@@ -1,6 +1,13 @@
 # Coinigy.jl
 Call Coinigy REST and WebSockets API from Julia
 
+## Installation
+
+```
+Pkg.clone("https://github.com/stejin/DandelionWebSockets.jl.git")
+Pkg.clone("https://github.com/stejin/Coinigy.jl.git")
+```
+
 ## Usage
 Create an instance of `CoinigyHandler` and use it to call REST or WebSocket methods.
 
