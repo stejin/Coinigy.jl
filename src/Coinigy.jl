@@ -22,7 +22,9 @@ module Coinigy
           getBids,
           getOrders,
           getMarketData,
-          getTicker
+          getTicker,
+          activateTradingKey,
+          addOrder
 
   export Exchanges, Channels
 
