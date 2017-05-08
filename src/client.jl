@@ -66,11 +66,11 @@ function getResult(handler, url, data = Dict())
     try
       parsedresp = Requests.json(resp)
       if "error" in keys(parsedresp)
-        error("Error parsing response to request with url: $url, data: $dat - $(parsedresp["error"])")
+        println("Error parsing response to request with url: $url, data: $data - $(parsedresp["error"])")
       end
       parsedresp
     catch e
-      error("Error parsing response to request with url: $url, data: $data - $resp")
+      error("Error parsing response to request with url: $url, data: $data - $resp - $parsedresp")
     end
   end
 end
@@ -271,5 +271,5 @@ getBids(handler, exchange, market)  = getResult(handler, "https://api.coinigy.co
 getOrders(handler, exchange, market)  = getResult(handler, "https://api.coinigy.com/api/v1/data", Dict("exchange_code" => exchange, "exchange_market" => market, "type" => "orders"))
 getMarketData(handler, exchange, market)  = getResult(handler, "https://api.coinigy.com/api/v1/data", Dict("exchange_code" => exchange, "exchange_market" => market, "type" => "all"))
 getTicker(handler, exchange, market)  = getResult(handler, "https://api.coinigy.com/api/v1/ticker", Dict("exchange_code" => exchange, "exchange_market" => market))
-activateTradingKey(handler, auth_id) = getResult(handler, "https://api.coinigy.com/api/v1/activateTradingKey", Dict("auth_id" => auth_id, "auth_trade" => 1))
-addOrder(handler, order) = getResult(handler, "https://api.coinigy.com/api/v1/addOrder", order)
+activateTradingKey(handler, authId) = getResult(handler, "https://api.coinigy.com/api/v1/activateTradingKey", Dict("auth_id" => authId, "auth_trade" => 1))
+addOrder(handler, authId, exchId, mktId, orderTypeId, priceTypeId, price, quantity) = getResult(handler, "https://api.coinigy.com/api/v1/addOrder", Dict("auth_id" => authId, "exch_id" => exchId, "mkt_id" => mktId, "order_type_id" => orderTypeId, "price_type_id" => priceTypeId, "limit_price" => price, "order_quantity" => quantity))
