@@ -184,6 +184,9 @@ function handle_command(handler::CoinigyHandler, eventInfo)
     cb = handler.channel_callbacks[channel]
     cb(eventInfo["data"])
     #publish(handler, eventInfo["data"])
+  elseif event == "NOTIFICATION"
+    println("Notification received")
+    println(eventInfo["data"])
   else
     println("Unhandled server event: $eventInfo")
   end
