@@ -1,7 +1,8 @@
 __precompile__()
 module Coinigy
 
-  export  CoinigyHandler,
+  export  CoinigyRestHandler,
+          CoinigyWebSocketHandler,
           connect,
           subscribe,
           unsubscribe,
@@ -27,8 +28,7 @@ module Coinigy
           activateTradingKey,
           addOrder
 
-  export Exchanges, Channels
-
-  include("client.jl")
+  include("rest_client.jl")
+  include("websocket_client.jl")
 
 end
