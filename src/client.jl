@@ -42,7 +42,8 @@ function getResult(handler::CoinigyHandler, url::String, data = Dict())
       if "error" in keys(parsedresp)
         println("Error parsing response to request with url: $url, data: $data - $(parsedresp["error"])")
       end
-      parsedresp
+      # return Array{Dict}
+      return map(d -> d, parsedresp["data"])
     catch e
       error("Error parsing response to request with url: $url, data: $data - $resp - $parsedresp")
     end
