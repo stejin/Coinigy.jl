@@ -25,7 +25,9 @@ function getResult(handler::CoinigyHandler, url::String, data = Dict())
   "X-API-KEY" => handler.api["apiKey"],
   "X-API-SECRET" => handler.api["apiSecret"])
   attempt = 1
+  handler.debug && (@show data)
   resp = post(url; headers = headers, data = JSON.json(data))
+  handler.debug && (@show resp)
   # Retry if service temporarily not available
   while resp.status == 503 && attempt < handler.max_attempts
     sleep(attempt) #increase wait time by one second for each failed attempt
@@ -39,6 +41,7 @@ function getResult(handler::CoinigyHandler, url::String, data = Dict())
   else
     try
       parsedresp = Requests.json(resp)
+      handler.debug && (@show parsedresp)
       if "error" in keys(parsedresp)
         println("Error parsing response to request with url: $url, data: $data - $(parsedresp["error"])")
       end
